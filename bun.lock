@@ -37,6 +37,7 @@
     "apps/engine": {
       "name": "engine",
       "dependencies": {
+        "avl": "^2.0.0",
         "redis": "^5.12.1",
       },
       "devDependencies": {
@@ -330,6 +331,8 @@
     "asynckit": ["asynckit@0.4.0", "", {}, "sha512-Oei9OH4tRh0YqU3GxhX79dM/mwVgvbZJaSNaRk+bshkj0S5cfHcgYakreBjrHwatXKbz+IoIdYLxrKim2MjW0Q=="],
 
     "available-typed-arrays": ["available-typed-arrays@1.0.7", "", { "dependencies": { "possible-typed-array-names": "^1.0.0" } }, "sha512-wvUjBtSGN7+7SjNpq/9M2Tg350UZD3q62IFZLbRAR1bSMlCo1ZaeW+BJ+D090e4hIIZLBcTDWe4Mh4jvUDajzQ=="],
+
+    "avl": ["avl@2.0.0", "", {}, "sha512-imPAgmVrjf2kRru+U9brsmAfVYVbIGPTqGFSouYfPEJZSv2FvitwGb1HjqANuAPtnabWoteHv4xEWkKIPB10mA=="],
 
     "aws-ssl-profiles": ["aws-ssl-profiles@1.1.2", "", {}, "sha512-NZKeq9AfyQvEeNlN0zSYAaWrmBffJh3IELMZfRpJVWgrpEbtEpnjvzqBPf+mxoI287JohRDoa+/nsfqqiZmF6g=="],
 

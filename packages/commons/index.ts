@@ -5,12 +5,12 @@ export type ToEngine = {
     loopBackId?: string
 } | {
     messageType: "create_order",
-    price: string,
-    qty: string,
+    price?: number,
+    qty: number,
     side: "sort" | "long",
-    marketId: string,
-    type: "limit" | "market",
-    equity: string,
+    symbol: any,
+    type: "limit" | "market" | "liquidation",
+    equity?: number,
     userId: string,
     orderId: string
     loopBackId?: string
@@ -23,4 +23,5 @@ export type ToEngine = {
     messageType: "create_market",
     marketId: string
     loopBackId?: string
+    marketSymbol: string
 }

@@ -11,6 +11,7 @@
     "typescript": "^5"
   },
   "dependencies": {
+    "avl": "^2.0.0",
     "redis": "^5.12.1"
   }
 }
