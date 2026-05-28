@@ -1,6 +1,7 @@
 import type { ToEngine } from "commons/client";
 import { balances, orderbooks, positions, type EngineRequest, type OpenOrder, type Position } from "..";
 import { INDEXPRICES, type Fill, type OrderRecord, type OrderType, type Side, type Symbol } from "../store/perps-store";
+import { AVLTree } from "avl";
 // import { INDEXPRICES, ORDERBOOKS, POSITIONS, type Fill, type OrderRecord, type OrderType, type Position, type RestingOrder, type Side, type Symbol } from "../store/perps-store";
 type IndexPrice = keyof typeof INDEXPRICES;
 // type IndexSymbol = keyof typeof ORDERBOOKS;
@@ -31,6 +32,10 @@ export function createOrderObj(message: ToEngine): OrderRecord {
 
 export function createPositionObj(order: OrderRecord): Position {
     const indexPrice = INDEXPRICES[order.symbol as IndexPrice].indexPrice;
+    let liquidationPrice = indexPrice - (order.margin / order.qty); // TODO
+    if (order.side === "SORT") {
+        liquidationPrice = indexPrice + (order.margin / order.qty);
+    }
     return {
         originalOrderId: order.orderId,
         symbol: order.symbol,
@@ -38,11 +43,40 @@ export function createPositionObj(order: OrderRecord): Position {
         qty: order.filledQty,
         margin: order.margin,
         leverage: order.leverage,
-        liquidationPrice: indexPrice - (order.margin / order.qty), // TODO
+        liquidationPrice: liquidationPrice,
         pnL: (order.filledQty * INDEXPRICES[order.symbol as IndexPrice].indexPrice) - (order.filledQty * order.averagePrice),
         averagePrice: order.averagePrice,
         userId: order.userId
     }
+}
+
+export function updatePositionObj(order: OrderRecord, position: Position, fill: Fill) {
+    // liquidation price
+    // qty
+    // margin
+    // pnL
+    // averagePrice
+    const indexPrice = INDEXPRICES[order.symbol as IndexPrice].indexPrice;
+    let liquidationPrice = indexPrice - (order.margin / order.qty); // TODO
+    if (order.side === "SORT") {
+        liquidationPrice = indexPrice + (order.margin / order.qty);
+    }
+
+    const pnL = (position.qty * indexPrice) - (position.qty * position.averagePrice);
+    const totalCostPrice = (position.averagePrice * position.qty) + (fill.price * fill.qty);
+    const totalCostMargin =  totalCostPrice / order.leverage;
+    const totalQty = position.qty + fill.qty;
+    const averagePrice = totalCostPrice / totalQty;
+    liquidationPrice = indexPrice - ((totalCostMargin + pnL) / totalQty);
+    if (order.side === "SORT") {
+        liquidationPrice = indexPrice + ((totalCostMargin + pnL) / totalQty);
+    }
+
+
+    position.liquidationPrice = liquidationPrice;
+    position.averagePrice = averagePrice;
+    position.qty = totalQty;
+    position.pnL = pnL;
 }
 
 export function handleOrder(order: OrderRecord) {
@@ -205,10 +239,13 @@ export function handleFill(firstRestingOrder: OpenOrder, order: OrderRecord, swa
     order.averagePrice = order.filledQty * order.averagePrice;
     order.fills.push(fill);
 
+    // position update
+    updatePositionObj(order, order.position!, fill);
+
     // opponenet ka resting order update
-    const opponentPosition = positions.get(firstRestingOrder.originalOrderId)!;
-    opponentPosition.qty += swapQty;
-    opponentPosition.averagePrice = ((opponentPosition.averagePrice * opponentPosition.qty) + (fill.price * fill.qty)) / (opponentPosition.qty + fill.qty);
+    // const opponentPosition = positions.get(firstRestingOrder.originalOrderId)!;
+    // opponentPosition.qty += swapQty;
+    // opponentPosition.averagePrice = ((opponentPosition.averagePrice * opponentPosition.qty) + (fill.price * fill.qty)) / (opponentPosition.qty + fill.qty);
     // opponentPosition.liquidationPrice = 0; // TODO
 
     // TODO - UPDATE BALANCE 

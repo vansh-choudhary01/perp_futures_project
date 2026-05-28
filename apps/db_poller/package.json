@@ -1,20 +1,15 @@
 {
-  "name": "engine",
+  "name": "db_poller",
   "module": "index.ts",
   "type": "module",
   "private": true,
-  "scripts": {
-    "dev": "bun --watch index.ts"
-  },
   "devDependencies": {
-    "@types/bun": "latest",
-    "commons": "workspace:*"
+    "@types/bun": "latest"
   },
   "peerDependencies": {
     "typescript": "^5"
   },
   "dependencies": {
-    "avl": "^2.0.0",
     "redis": "^5.12.1"
   }
 }

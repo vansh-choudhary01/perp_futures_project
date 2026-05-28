@@ -20,6 +20,7 @@ export function loopback(message: ToEngine) {
     return new Promise(async (resolve, reject) => {
         const loopBackId = Math.random().toString();
         console.log("before publish")
+        console.log({loopBackId, ...message});
         await client.xAdd("engine", "*", {loopBackId, ...message} as Record<string, string>);
         console.log("after publish")
         loopbackResolves.set(loopBackId, resolve);
@@ -52,7 +53,7 @@ async function main() {
             loopBackId: string
         } = response[0].messages[0].message
     
-        loopbackResolves.get(message.loopBackId)?.();
+        loopbackResolves.get(message.loopBackId)?.(message);
         loopbackResolves.delete(message.loopBackId);
     }
 }

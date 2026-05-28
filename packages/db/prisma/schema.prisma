@@ -23,7 +23,7 @@ model User {
 
 model Market {
     id                  String      @id         @default(uuid())
-    slug                String
+    slug                String      @unique
     imageUrl            String
 }
 
@@ -43,7 +43,7 @@ model Order {
     updatedAt           DateTime    @updatedAt
     maker_fills         Fill[]      @relation("maker")
     taker_fills         Fill[]      @relation("taker")
-    user                User        @relation("userOrders", fields: [userId], references: [id])
+    user                User        @relation("userOrders", fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Fill {

@@ -20,6 +20,11 @@ app.post("/api/v1/signup", async (req, res) => {
             username,
             password
         }
+    });
+
+    const queueLoopbackResponse = await loopback({
+        messageType: "create_balance",
+        userId: response.id,
     })
 
     res.json({
@@ -63,7 +68,7 @@ app.post("/admin/market", async (req, res) => {
     console.log("hellooooeoeo");
     console.log(process.env.ADIMN_SECRET)
     console.log(token)
-    
+
     if (token != process.env.ADIMN_SECRET) {
         res.status(403).json({})
         return;
@@ -77,13 +82,15 @@ app.post("/admin/market", async (req, res) => {
             imageUrl
         }
     })
+    console.log(response);
 
     // const queueResponse = await client.xAdd("engine-queue", "*", );
     console.log("hi")
 
     const queueLoopbackResponse = await loopback({
         messageType: "create_market",
-        marketId: response.id
+        marketId: response.id,
+        marketSymbol: symbol
     })
     console.log("hello")
 
@@ -104,12 +111,35 @@ app.post("/api/v1/onramp", authMiddleware, async (req, res) => {
     })
 
     // console.log(response);
-
+    console.log(queueLoopbackResponse);
+    res.json(queueLoopbackResponse);
 })
 
 
-app.post("/api/v1/order", authMiddleware, (req, res) => {
-    const userId = req.userId;
+app.post("/api/v1/order", authMiddleware, async (req, res) => {
+    const userId = req.userId!;
+    const { price, qty, side, symbol, type, equity } = req.body;
+
+    const queueLoopbackResponse: {
+        loopBackId: string,
+        messageType: string,
+        order: string,
+    } = await loopback({
+        messageType: "create_order",
+        price,
+        qty,
+        side,
+        symbol,
+        type,
+        equity,
+        userId,
+    }) as any;
+
+    if (queueLoopbackResponse) queueLoopbackResponse.order = JSON.parse(queueLoopbackResponse.order);
+    console.log(queueLoopbackResponse);
+    res.status(200).json(queueLoopbackResponse.order);
 })
 
-app.listen(3000);
+app.listen(3000, () => {
+    console.log("server is running on 3000");
+});

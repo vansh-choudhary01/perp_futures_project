@@ -89,6 +89,19 @@ export const liquidationPositions = {
     SORT: new MaxHeap(),
 }
 
+try {
+    await client.xGroupCreate(
+        "engine",   //stream name
+        "engine",   //group name
+        "$",        //start from latest messages
+        {
+            MKSTREAM: true
+        }
+    );
+} catch {
+
+}
+
 async function matching() {
     while (1) {
         const response = await client.xReadGroup("engine", "engine", [{
@@ -126,17 +139,33 @@ async function matching() {
 
         }
 
+        if (message.messageType === "create_balance") {
+            balances.set(message.userId, {
+                USDT: {
+                    available: 0,
+                    locked: 0,
+                }
+            });
+
+            await publisher.xAdd("to-backend", "*", {
+                loopBackId: message.loopBackId
+            });
+        }
+
         if (message.messageType == "onramp") {
-            balances.get(message.userId)!["USDT"]!.available += message.amount;
+            balances.get(message.userId)!["USDT"]!.available += Number(message.amount);
             await publisher.xAdd("to-backend", "*", {
                 loopBackId: message.loopBackId
             })
         }
 
+        console.log(message);
         if (message.messageType === "create_order") {
             const order = createOrder(message);
+            console.log(order);
             await publisher.xAdd("to-backend", "*", {
                 loopBackId: message.loopBackId,
+                messageType: message.messageType,
                 order: JSON.stringify(order),
             })
         }
@@ -158,12 +187,12 @@ function liquidationChecks() {
         INDEXPRICES['SOL'].indexPrice = msg.indexPrice;
 
         const indexPrice = msg.indexPrice;
-        while(liquidationPositions.LONG.getTop() && indexPrice < liquidationPositions.LONG.getTop()!.price) {
+        while (liquidationPositions.LONG.getTop() && indexPrice < liquidationPositions.LONG.getTop()!.price) {
             const position = positions.get(liquidationPositions.LONG.getTop()!.orderId);
             const message: ToEngine = {
                 messageType: "create_order",
-                qty: position!.qty,
-                side: "sort",
+                qty: String(position!.qty),
+                side: "SORT",
                 symbol: position?.symbol,
                 type: "liquidation",
                 userId: position!.userId,
@@ -172,16 +201,17 @@ function liquidationChecks() {
 
             const order = createOrder(message);
             publisher.xAdd("to-backend", "*", {
+                messageType: message.messageType,
                 order: JSON.stringify(order)
             })
         }
 
-        while(liquidationPositions.SORT.getTop() && indexPrice > liquidationPositions.SORT.getTop()!.price) {
+        while (liquidationPositions.SORT.getTop() && indexPrice > liquidationPositions.SORT.getTop()!.price) {
             const position = positions.get(liquidationPositions.LONG.getTop()!.orderId);
             const message: ToEngine = {
                 messageType: "create_order",
-                qty: position!.qty,
-                side: "long",
+                qty: String(position!.qty),
+                side: "LONG",
                 symbol: position?.symbol,
                 type: "liquidation",
                 userId: position!.userId,
@@ -190,11 +220,13 @@ function liquidationChecks() {
 
             const order = createOrder(message);
             publisher.xAdd("to-backend", "*", {
+                messageType: message.messageType,
                 order: JSON.stringify(order)
             })
         }
     }
 }
 
+console.log("engine is running");
 matching();
-liquidationChecks();
+// liquidationChecks();

@@ -97,6 +97,6 @@ export interface OrderRecord {
 // export const BALANCES = new Map<string, Record<string, Balance>>();
 
 export const INDEXPRICES = {
-  SOL: { indexPrice: 0, leverageThresold: 100},
-  ETH: { indexPrice: 0, leverageThresold: 100},
+  SOL: { indexPrice: 100, leverageThresold: 100},
+  ETH: { indexPrice: 100, leverageThresold: 100},
 };

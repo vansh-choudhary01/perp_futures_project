@@ -1,18 +1,18 @@
 export type ToEngine = {
     messageType: "onramp",
     userId: string,
-    amount: number
+    amount: string
     loopBackId?: string
 } | {
     messageType: "create_order",
-    price?: number,
-    qty: number,
-    side: "sort" | "long",
+    price?: string,
+    qty: string,
+    side: "SORT" | "LONG",
     symbol: any,
     type: "limit" | "market" | "liquidation",
-    equity?: number,
+    equity?: string,
     userId: string,
-    orderId: string
+    orderId?: string
     loopBackId?: string
 } | {
     messageType: "cancel_order",
@@ -24,4 +24,8 @@ export type ToEngine = {
     marketId: string
     loopBackId?: string
     marketSymbol: string
+} | {
+    messageType: "create_balance",
+    userId: string,
+    loopBackId?: string
 }

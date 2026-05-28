@@ -8,8 +8,10 @@ import { createOrderObj, createPositionObj, handleOrder } from "./futuresControl
 export function createOrder(message: ToEngine): OrderRecord {
     // create order
     if (message.messageType !== "create_order") return {} as OrderRecord;
+    console.log(JSON.stringify(message));
     const order = createOrderObj(message);
 
+    console.log(JSON.stringify(order));
     if (message.type !== "liquidation") {
         const indexPrice = INDEXPRICES[order.symbol];
         const balance = balances.get(order.userId)!["USDT"]!;
